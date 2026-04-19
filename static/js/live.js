@@ -1,7 +1,6 @@
 (() => {
   "use strict";
 
-  // عناصر الصفحة
   const startBtn = document.getElementById("startRecBtn");
   const stopBtn = document.getElementById("stopRecBtn");
   const clearAudioBtn = document.getElementById("clearAudioBtn");
@@ -11,7 +10,6 @@
   const msg = document.getElementById("messageBox");
   const editor = document.getElementById("editor");
 
-  // أدوات النص (اختياري—إذا موجودة تشتغل)
   const fontMinusBtn = document.getElementById("fontMinusBtn");
   const fontPlusBtn = document.getElementById("fontPlusBtn");
   const fontFamilySelect = document.getElementById("fontFamilySelect");
@@ -39,7 +37,6 @@
   const wordCount = document.getElementById("wordCount");
   const charCount = document.getElementById("charCount");
 
-  // ===== Helpers =====
   function show(text, type = "") {
     if (!msg) return;
     msg.textContent = text || "";
@@ -55,25 +52,20 @@
     location.href = "/login";
   }
 
-  // يلقط التوكن من أي تخزين سابق عندك
   function getToken() {
-    // 1) شكل قديم: {access_token, user}
     try {
       const a = JSON.parse(localStorage.getItem("nebras_auth") || "null");
       if (a && a.access_token) return a.access_token;
     } catch {}
 
-    // 2) شكل ثاني: {token, username}
     try {
       const b = JSON.parse(localStorage.getItem("nebras_auth_v2") || "null");
       if (b && b.token) return b.token;
     } catch {}
 
-    // 3) تخزين مباشر
     const t = localStorage.getItem("nebras_token");
     if (t) return t;
 
-    // 4) تخزين باسم access_token
     const t2 = localStorage.getItem("access_token");
     if (t2) return t2;
 
@@ -87,7 +79,6 @@
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${token}`);
 
-    // لا نحط Content-Type إذا FormData
     const isForm = options.body instanceof FormData;
     if (!isForm && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
     if (!headers.has("Accept")) headers.set("Accept", "application/json");
@@ -114,7 +105,6 @@
     if (charCount) charCount.textContent = `Chars: ${chars}`;
   }
 
-  // ===== Recording =====
   let mediaRecorder = null;
   let chunks = [];
   let timerId = null;
@@ -137,7 +127,6 @@
   }
 
   function pickMimeType() {
-    // أفضلية ogg (شائع مع opus) — وإلا webm
     const candidates = [
       "audio/ogg;codecs=opus",
       "audio/webm;codecs=opus",
@@ -204,12 +193,10 @@
   async function transcribeBlob(blob) {
     try {
       const fd = new FormData();
-
-      // مهم: اسم ملف بامتداد ogg عشان يمر من فلتر الامتدادات بالسيرفر
       const file = new File([blob], "live.ogg", { type: blob.type || "audio/ogg" });
       fd.append("audio", file);
 
-      const data = await apiFetch("/transcribe", { method: "POST", body: fd });
+      const data = await apiFetch("/live-transcribe", { method: "POST", body: fd });
 
       const text = data && data.transcription ? String(data.transcription) : "";
       if (editor) editor.textContent = text;
@@ -223,7 +210,6 @@
     }
   }
 
-  // ===== Text tools (خفيفة وآمنة) =====
   function setFontSize(delta) {
     if (!editor) return;
     const cur = parseFloat(getComputedStyle(editor).fontSize) || 16;
@@ -337,7 +323,6 @@
     document.body.classList.toggle("reading-mode", reading);
   }
 
-  // ===== Bind =====
   const token = getToken();
   if (!token) redirectToLogin();
 
@@ -367,7 +352,6 @@
   if (replaceOneBtn) replaceOneBtn.addEventListener("click", replaceOne);
   if (replaceAllBtn) replaceAllBtn.addEventListener("click", replaceAll);
 
-  // init
   if (recTimer) recTimer.textContent = "00:00";
   setStatus("Ready");
   loadDraft();
