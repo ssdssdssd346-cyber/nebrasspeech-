@@ -11,9 +11,6 @@ from whisper_service import transcribe_audio
 app = Flask(__name__, static_folder="static", static_url_path="", template_folder="templates")
 CORS(app)
 
-# =========================
-# CONFIG
-# =========================
 MYSQL_HOST = os.environ.get("MYSQLHOST", "localhost")
 MYSQL_PORT = os.environ.get("MYSQLPORT", "3306")
 MYSQL_USER = os.environ.get("MYSQLUSER", "root")
@@ -28,7 +25,6 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-key")
 
 db.init_app(app)
 
-# ينشئ الجداول تلقائياً
 with app.app_context():
     db.create_all()
 
@@ -41,9 +37,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 ALLOWED_EXTENSIONS = {"wav", "mp3", "ogg", "m4a", "webm", "flac"}
 
 
-# =========================
-# HELPERS
-# =========================
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -108,9 +101,6 @@ def create_session_with_file(user_id, title, transcript, source_type, file_meta,
     return session_row, file_row
 
 
-# =========================
-# AUTH HELPER
-# =========================
 from auth import _get_user_from_auth_header
 
 
@@ -118,9 +108,6 @@ def require_auth():
     return _get_user_from_auth_header()
 
 
-# =========================
-# PAGE ROUTES
-# =========================
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -168,9 +155,6 @@ def uploaded_audio(filename):
     return send_from_directory(UPLOAD_DIR, filename)
 
 
-# =========================
-# API ROUTES
-# =========================
 @app.route("/upload-transcribe-save", methods=["POST"])
 def upload_transcribe_save():
     try:
@@ -250,6 +234,31 @@ def get_sessions():
 
     except Exception as e:
         print("SESSIONS ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/sessions/<int:session_id>", methods=["PUT"])
+def update_session(session_id):
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({"error": "Unauthorized"}), 401
+
+        session_row = Session.query.filter_by(id=session_id, user_id=user.id).first()
+        if not session_row:
+            return jsonify({"error": "Session not found"}), 404
+
+        data = request.get_json(silent=True) or {}
+        if "title" in data:
+            session_row.title = data["title"]
+        if "transcript" in data:
+            session_row.transcript = data["transcript"]
+
+        db.session.commit()
+        return jsonify({"message": "Session updated successfully."}), 200
+
+    except Exception as e:
+        print("UPDATE SESSION ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
 
