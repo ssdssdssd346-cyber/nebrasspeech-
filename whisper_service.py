@@ -2,14 +2,14 @@ import os
 
 def transcribe_audio(file_path):
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        from groq import Groq
+        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
         with open(file_path, "rb") as f:
             result = client.audio.transcriptions.create(
-                model="whisper-1",
+                model="whisper-large-v3",
                 file=f
             )
         return {"text": result.text, "language": None}
     except Exception as e:
-        print("Whisper API error:", str(e))
+        print("Groq error:", str(e))
         return {"text": "", "language": None}
