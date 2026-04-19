@@ -5,10 +5,14 @@ from auth import auth_bp
 
 app = Flask(__name__, static_folder="static", static_url_path="/")
 
-# قاعدة البيانات من Railway
-database_url = os.environ.get("MYSQL_URL", "")
-if database_url.startswith("mysql://"):
-    database_url = database_url.replace("mysql://", "mysql+pymysql://", 1)
+# بناء الـ URL من المتغيرات المنفردة
+MYSQL_HOST = os.environ.get("MYSQLHOST", "localhost")
+MYSQL_PORT = os.environ.get("MYSQLPORT", "3306")
+MYSQL_USER = os.environ.get("MYSQLUSER", "root")
+MYSQL_PASSWORD = os.environ.get("MYSQLPASSWORD", "")
+MYSQL_DATABASE = os.environ.get("MYSQLDATABASE", "railway")
+
+database_url = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
