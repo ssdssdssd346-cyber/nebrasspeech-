@@ -1,10 +1,9 @@
 import os
-from openai import OpenAI
-
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 def transcribe_audio(file_path):
     try:
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         with open(file_path, "rb") as f:
             result = client.audio.transcriptions.create(
                 model="whisper-1",
