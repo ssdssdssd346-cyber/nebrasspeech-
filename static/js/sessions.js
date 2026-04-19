@@ -16,7 +16,6 @@
   const listMsg = document.getElementById("listMessageBox");
   const viewMsg = document.getElementById("viewerMessageBox");
 
-  // أدوات النص
   const fontMinusBtn = document.getElementById("fontMinusBtn");
   const fontPlusBtn = document.getElementById("fontPlusBtn");
   const fontFamilySelect = document.getElementById("fontFamilySelect");
@@ -108,7 +107,6 @@
     if (charCount) charCount.textContent = `Chars: ${chars}`;
   }
 
-  // ===== Sessions Logic =====
   let sessions = [];
   let active = null;
   let reading = false;
@@ -149,7 +147,6 @@
 
     if (sessionTitleInput) sessionTitleInput.value = s.title || "";
     if (editor) editor.textContent = s.transcript || "";
-
     if (activeMeta) activeMeta.textContent = `Active session: ${s.id}`;
 
     if (exportTxtBtn) exportTxtBtn.disabled = false;
@@ -162,7 +159,7 @@
   async function loadSessions() {
     try {
       showList("Loading…");
-      const data = await apiFetch("/sessions", { method: "GET" });
+      const data = await apiFetch("/api/sessions", { method: "GET" });
 
       sessions = Array.isArray(data.sessions) ? data.sessions : [];
       renderList();
@@ -194,11 +191,29 @@
   async function updateSession() {
     if (!active) return;
 
-    // هذا يحتاج دعم من الباك اند (PUT route)
-    showView("Update يحتاج دعم من الباك اند (PUT /sessions/<id>).", "error");
+    const newTitle = (sessionTitleInput?.value || "").trim();
+    const newTranscript = (editor?.innerText || "").trim();
+
+    try {
+      showView("Saving…");
+      await apiFetch(`/api/sessions/${active.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ title: newTitle, transcript: newTranscript })
+      });
+
+      active.title = newTitle;
+      active.transcript = newTranscript;
+
+      const idx = sessions.findIndex(s => s.id === active.id);
+      if (idx !== -1) sessions[idx] = { ...sessions[idx], title: newTitle, transcript: newTranscript };
+
+      renderList();
+      showView("Session saved.", "success");
+    } catch (err) {
+      showView(err.message || "Failed to save session.", "error");
+    }
   }
 
-  // ===== Text Tools =====
   function setFontSize(delta) {
     if (!editor) return;
     const cur = parseFloat(getComputedStyle(editor).fontSize) || 16;
@@ -297,7 +312,6 @@
     document.body.classList.toggle("reading-mode", reading);
   }
 
-  // ===== Bind =====
   const token = getToken();
   if (!token) redirectToLogin();
 
@@ -324,7 +338,6 @@
 
   if (applyHighlightBtn && highlightSelect) {
     applyHighlightBtn.addEventListener("click", () => {
-      // Highlight selection safely (simple wrapper)
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0) return;
       const range = sel.getRangeAt(0);
@@ -348,7 +361,6 @@
   if (replaceOneBtn) replaceOneBtn.addEventListener("click", replaceOne);
   if (replaceAllBtn) replaceAllBtn.addEventListener("click", replaceAll);
 
-  // init
   if (exportTxtBtn) exportTxtBtn.disabled = true;
   if (updateSessionBtn) updateSessionBtn.disabled = true;
   loadSessions();
