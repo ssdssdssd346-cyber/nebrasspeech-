@@ -12,7 +12,6 @@
   const wordCount = document.getElementById("wordCount");
   const charCount = document.getElementById("charCount");
 
-  // أدوات النص (إذا موجودة)
   const fontMinusBtn = document.getElementById("fontMinusBtn");
   const fontPlusBtn = document.getElementById("fontPlusBtn");
   const fontFamilySelect = document.getElementById("fontFamilySelect");
@@ -110,7 +109,7 @@
       const fd = new FormData();
       fd.append("audio", file);
 
-      const data = await apiFetch("/transcribe", { method: "POST", body: fd });
+      const data = await apiFetch("/upload-transcribe-save", { method: "POST", body: fd });
       const text = data && data.transcription ? String(data.transcription) : "";
 
       if (editor) editor.textContent = text;
@@ -136,7 +135,6 @@
     show("");
   }
 
-  // ===== tools =====
   function setFontSize(delta) {
     if (!editor) return;
     const cur = parseFloat(getComputedStyle(editor).fontSize) || 16;
@@ -247,7 +245,6 @@
     document.body.classList.toggle("reading-mode", reading);
   }
 
-  // ===== Bind =====
   const token = getToken();
   if (!token) redirectToLogin();
 
@@ -289,8 +286,6 @@
   if (replaceOneBtn) replaceOneBtn.addEventListener("click", replaceOne);
   if (replaceAllBtn) replaceAllBtn.addEventListener("click", replaceAll);
 
-  // init
   setStatus("Ready");
   loadDraft();
 })();
-
