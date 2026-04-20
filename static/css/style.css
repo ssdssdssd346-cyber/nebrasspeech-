@@ -19,10 +19,10 @@
   --green-100:#e9fff3;
   --green-200:#cffff0;
 
-  --accent:#ff8fb1;      /* main pink */
-  --accent-2:#ffb347;    /* soft orange */
-  --mint:#4ecdc4;        /* mint */
-  --lime:#7bd389;        /* soft green */
+  --accent:#ff8fb1;
+  --accent-2:#ffb347;
+  --mint:#4ecdc4;
+  --lime:#7bd389;
 
   --text:#242424;
   --muted:#6b6b6b;
@@ -44,7 +44,6 @@
   --focus:0 0 0 4px rgba(255,143,177,0.18);
 }
 
-/* ===== Reset ===== */
 *{ box-sizing:border-box; margin:0; padding:0; }
 html,body{ height:100%; }
 body{
@@ -65,7 +64,6 @@ body{
 a{ color:inherit; }
 img{ max-width:100%; height:auto; display:block; }
 
-/* ===== Accessible utility ===== */
 .sr-only{
   position:absolute !important;
   width:1px; height:1px;
@@ -74,13 +72,11 @@ img{ max-width:100%; height:auto; display:block; }
   white-space:nowrap; border:0;
 }
 
-/* ===== Layout ===== */
 .container{
   width:min(1200px, 92%);
   margin-inline:auto;
 }
 
-/* ===== Navbar ===== */
 .navbar{
   position:sticky;
   top:0;
@@ -130,7 +126,6 @@ img{ max-width:100%; height:auto; display:block; }
   transform: translateY(-1px);
 }
 
-/* ===== Buttons ===== */
 .btn-primary,
 .btn-outline,
 .session-open-btn,
@@ -177,7 +172,6 @@ img{ max-width:100%; height:auto; display:block; }
   box-shadow:none;
 }
 
-/* ===== Inputs ===== */
 .input, .select{
   width: auto;
   padding: 10px 12px;
@@ -196,13 +190,11 @@ img{ max-width:100%; height:auto; display:block; }
 
 .input::placeholder{ color: rgba(107,107,107,0.7); }
 
-/* ===== Typography helpers ===== */
 .muted{ color: var(--muted); }
 h1{ font-size: clamp(1.7rem, 2.2vw, 2.6rem); letter-spacing:-0.5px; }
 h2{ font-size: clamp(1.2rem, 1.6vw, 1.6rem); letter-spacing:-0.2px; }
 h3{ font-size: 1.05rem; }
 
-/* ===== Card / Glass Panel ===== */
 .section,
 .tool-panel,
 .sessions-list-panel,
@@ -217,14 +209,12 @@ h3{ font-size: 1.05rem; }
   box-shadow: var(--shadow);
 }
 
-/* subtle floating vibe */
 @keyframes floaty{
   0%{ transform: translateY(0); }
   50%{ transform: translateY(-4px); }
   100%{ transform: translateY(0); }
 }
 
-/* ===== Footer ===== */
 .footer{
   margin-top: 34px;
   padding: 20px 0 28px;
@@ -233,9 +223,6 @@ h3{ font-size: 1.05rem; }
   font-size:0.9rem;
 }
 
-/* =========================================================
-   INDEX / HOME
-   ========================================================= */
 .hero{
   padding: 52px 0 24px;
 }
@@ -338,9 +325,6 @@ h3{ font-size: 1.05rem; }
   flex-wrap:wrap;
 }
 
-/* =========================================================
-   AUTH PAGES (login/register) – generic styles
-   ========================================================= */
 .auth-wrap{
   min-height: calc(100vh - 80px);
   display:grid;
@@ -348,8 +332,18 @@ h3{ font-size: 1.05rem; }
   padding: 34px 0;
 }
 
-.auth-card{
+.auth-page{
+  min-height: calc(100vh - 80px);
+  display:grid;
+  place-items:center;
+  padding: 34px 0;
+}
+
+.auth-container{
   width: min(520px, 92%);
+}
+
+.auth-card{
   padding: 22px;
   position:relative;
   overflow:hidden;
@@ -377,6 +371,18 @@ h3{ font-size: 1.05rem; }
 
 .form .input, .form .select{ width:100%; }
 
+.form-group{
+  display:grid;
+  gap: 6px;
+}
+
+.form-group label{
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.full-width{ width: 100%; }
+
 .form-actions{
   margin-top: 6px;
   display:flex;
@@ -385,9 +391,12 @@ h3{ font-size: 1.05rem; }
   flex-wrap:wrap;
 }
 
-/* =========================================================
-   DASHBOARD
-   ========================================================= */
+.error{
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
 .dashboard{
   padding: 34px 0;
 }
@@ -438,9 +447,6 @@ h3{ font-size: 1.05rem; }
 
 .dashboard-card > *{ position:relative; z-index:1; }
 
-/* =========================================================
-   LIVE / UPLOAD TOOL PAGES
-   ========================================================= */
 .tool-page{
   padding: 32px 0;
 }
@@ -529,7 +535,6 @@ h3{ font-size: 1.05rem; }
   flex: 1 1 260px;
 }
 
-/* Word/char */
 #wordCount, #charCount{
   display:inline-flex;
   padding: 6px 10px;
@@ -538,12 +543,10 @@ h3{ font-size: 1.05rem; }
   border: 1px solid rgba(0,0,0,0.03);
 }
 
-/* Audio player wrapper */
 #audioPlayerWrap{
   margin-top: 10px;
 }
 
-/* Message box */
 .message-box{
   margin-top: 12px;
   font-size:0.92rem;
@@ -552,9 +555,6 @@ h3{ font-size: 1.05rem; }
 .message-box.success{ color: var(--mint); }
 .message-box.error{ color: #ff6b6b; }
 
-/* =========================================================
-   SESSIONS PAGE LAYOUT
-   ========================================================= */
 .sessions-page{
   padding: 32px 0;
 }
@@ -584,6 +584,40 @@ h3{ font-size: 1.05rem; }
   margin-top: 12px;
   display:grid;
   gap: 10px;
+}
+
+.sessions-item{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  justify-content:space-between;
+  padding: 10px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: var(--t);
+}
+
+.sessions-item:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.06);
+}
+
+.sessions-item-btn{
+  flex: 1 1 auto;
+  text-align:left;
+  background: transparent;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+  transition: var(--t);
+}
+
+.sessions-item-btn:hover{
+  background: rgba(255,143,177,0.10);
 }
 
 .session-item{
@@ -627,43 +661,36 @@ h3{ font-size: 1.05rem; }
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   Editor feature classes (JS adds these)
-   ========================================================= */
-
-/* Font sizes */
 .fs-1{ font-size: 14px; }
 .fs-2{ font-size: 16px; }
 .fs-3{ font-size: 18px; }
 .fs-4{ font-size: 22px; }
 .fs-5{ font-size: 26px; }
 
-/* Font families */
 .font-sans{ font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
 .font-serif{ font-family: ui-serif, Georgia, "Times New Roman", serif; }
 .font-mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-/* Alignment */
 .align-left{ text-align:left; }
 .align-center{ text-align:center; }
 .align-right{ text-align:right; }
 
-/* Highlights */
 .highlight.hl-yellow{ background:#fff7b2; }
 .highlight.hl-blue{ background:#d9f2ff; }
 .highlight.hl-green{ background:#d9ffe8; }
 .highlight.hl-pink{ background:#ffe3f1; }
 
-/* Find hit style (إذا حبيتي ترجعين لنظام تظليل النتائج لاحقًا) */
+.hl-yellow{ background:#fff7b2; }
+.hl-blue{ background:#d9f2ff; }
+.hl-green{ background:#d9ffe8; }
+.hl-pink{ background:#ffe3f1; }
+
 .find-hit{
   background: rgba(255,179,71,0.25);
   border-radius: 6px;
   padding: 0 2px;
 }
 
-/* =========================================================
-   Reading mode (hide navigation / list panel)
-   ========================================================= */
 .reading-mode .navbar{
   display:none;
 }
@@ -686,9 +713,6 @@ h3{ font-size: 1.05rem; }
   box-shadow: var(--shadow-2);
 }
 
-/* =========================================================
-   Responsive
-   ========================================================= */
 @media (max-width: 980px){
   .hero-container{ grid-template-columns: 1fr; }
   .cards{ grid-template-columns: 1fr; }
