@@ -1,8 +1,8 @@
-import os
-import uuid
 from flask import Flask, request, jsonify, send_from_directory, render_template
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+import os
+import uuid
 
 from database import db, Session, SessionFile, log_action
 from auth import auth_bp
@@ -11,23 +11,13 @@ from whisper_service import transcribe_audio
 app = Flask(__name__, static_folder="static", static_url_path="", template_folder="templates")
 CORS(app)
 
-MYSQL_HOST = os.environ.get("MYSQLHOST", "localhost")
-MYSQL_PORT = os.environ.get("MYSQLPORT", "3306")
-MYSQL_USER = os.environ.get("MYSQLUSER", "root")
-MYSQL_PASSWORD = os.environ.get("MYSQLPASSWORD", "")
-MYSQL_DATABASE = os.environ.get("MYSQLDATABASE", "railway")
-
-database_url = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}?charset=utf8mb4"
-
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+# =========================
+# CONFIG
+# =========================
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:@127.0.0.1/nebras_db?charset=utf8mb4"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-key")
 
 db.init_app(app)
-
-with app.app_context():
-    db.create_all()
-
 app.register_blueprint(auth_bp)
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -37,6 +27,9 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 ALLOWED_EXTENSIONS = {"wav", "mp3", "ogg", "m4a", "webm", "flac"}
 
 
+# =========================
+# HELPERS
+# =========================
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -101,13 +94,20 @@ def create_session_with_file(user_id, title, transcript, source_type, file_meta,
     return session_row, file_row
 
 
+# =========================
+# AUTH HELPER
+# =========================
 from auth import _get_user_from_auth_header
 
 
 def require_auth():
+    """Returns user or None"""
     return _get_user_from_auth_header()
 
 
+# =========================
+# PAGE ROUTES
+# =========================
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -147,6 +147,7 @@ def sessions_page():
     return render_template("sessions.html")
 
 
+
 @app.route("/uploads/<path:filename>")
 def uploaded_audio(filename):
     user = require_auth()
@@ -155,12 +156,17 @@ def uploaded_audio(filename):
     return send_from_directory(UPLOAD_DIR, filename)
 
 
+# =========================
+# API ROUTES
+# =========================
 @app.route("/upload-transcribe-save", methods=["POST"])
 def upload_transcribe_save():
     try:
         user = require_auth()
         if not user:
             return jsonify({"error": "Unauthorized"}), 401
+
+        user_id = user.id
 
         if "audio" not in request.files:
             return jsonify({"error": "No audio file uploaded."}), 400
@@ -175,10 +181,14 @@ def upload_transcribe_save():
             return jsonify({"error": "Unsupported audio type."}), 400
 
         file_meta = save_uploaded_file(file)
+
+        if not os.path.exists(file_meta["stored_path"]):
+            return jsonify({"error": f"Uploaded file not found: {file_meta['stored_path']}"}), 500
+
         whisper_result = transcribe_audio(file_meta["stored_path"])
 
         session_row, file_row = create_session_with_file(
-            user_id=user.id,
+            user_id=user_id,
             title=title or file_meta["original_name"],
             transcript=whisper_result["text"],
             source_type="upload",
@@ -204,10 +214,12 @@ def get_sessions():
         if not user:
             return jsonify({"error": "Unauthorized"}), 401
 
+        user_id = user.id
+
         rows = (
             db.session.query(Session, SessionFile)
             .outerjoin(SessionFile, Session.id == SessionFile.session_id)
-            .filter(Session.user_id == user.id)
+            .filter(Session.user_id == user_id)
             .order_by(Session.created_at.desc())
             .all()
         )
@@ -234,31 +246,6 @@ def get_sessions():
 
     except Exception as e:
         print("SESSIONS ERROR:", str(e))
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/sessions/<int:session_id>", methods=["PUT"])
-def update_session(session_id):
-    try:
-        user = require_auth()
-        if not user:
-            return jsonify({"error": "Unauthorized"}), 401
-
-        session_row = Session.query.filter_by(id=session_id, user_id=user.id).first()
-        if not session_row:
-            return jsonify({"error": "Session not found"}), 404
-
-        data = request.get_json(silent=True) or {}
-        if "title" in data:
-            session_row.title = data["title"]
-        if "transcript" in data:
-            session_row.transcript = data["transcript"]
-
-        db.session.commit()
-        return jsonify({"message": "Session updated successfully."}), 200
-
-    except Exception as e:
-        print("UPDATE SESSION ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
 
@@ -303,7 +290,5 @@ def live_final_save():
         print("LIVE FINAL SAVE ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(debug=True)

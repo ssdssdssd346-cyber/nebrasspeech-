@@ -104,6 +104,7 @@ class AuditLog(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 
+# 🔹 دالة تسجيل النشاط
 def log_action(action, user_id=None, entity_type=None, entity_id=None,
                ip_address=None, user_agent=None, details=None):
     try:

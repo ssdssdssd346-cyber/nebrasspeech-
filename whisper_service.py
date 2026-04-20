@@ -1,19 +1,22 @@
 import os
-import httpx
 
-def transcribe_audio(file_path):
-    try:
-        from groq import Groq
-        client = Groq(
-            api_key=os.environ.get("GROQ_API_KEY"),
-            http_client=httpx.Client()
-        )
-        with open(file_path, "rb") as f:
-            result = client.audio.transcriptions.create(
-                model="whisper-large-v3",
-                file=f
-            )
-        return {"text": result.text, "language": None}
-    except Exception as e:
-        print("Groq error:", str(e))
-        return {"text": "", "language": None}
+_model = None
+
+def get_model():
+    global _model
+    if _model is None:
+        import whisper
+        print("⏳ تحميل نموذج Whisper...")
+        _model = whisper.load_model("base")
+        print("✅ النموذج جاهز")
+    return _model
+
+def transcribe_audio(file_path: str) -> dict:
+    """
+    تحويل ملف صوتي إلى نص
+    يقبل أي صيغة صوتية (webm, ogg, mp3, wav...)
+    يرجع dict فيه {"text": "..."} عشان يتوافق مع app.py
+    """
+    model = get_model()
+    result = model.transcribe(file_path)
+    return {"text": result["text"].strip()}
