@@ -9,6 +9,7 @@
   const audioInfo = document.getElementById("audioInfo");
   const msg = document.getElementById("messageBox");
   const editor = document.getElementById("editor");
+  const translationBox = document.getElementById("translationBox");
 
   const fontMinusBtn = document.getElementById("fontMinusBtn");
   const fontPlusBtn = document.getElementById("fontPlusBtn");
@@ -36,6 +37,7 @@
 
   const translateBtn = document.getElementById("translateBtn");
   const translateLangSelect = document.getElementById("translateLangSelect");
+  const copyTranslationBtn = document.getElementById("copyTranslationBtn");
 
   const saveSessionBtn = document.getElementById("saveSessionBtn");
   const sessionTitleInput = document.getElementById("sessionTitle");
@@ -54,9 +56,7 @@
     if (statusPill) statusPill.textContent = text;
   }
 
-  function redirectToLogin() {
-    location.href = "/login";
-  }
+  function redirectToLogin() { location.href = "/login"; }
 
   function getToken() {
     try {
@@ -76,7 +76,6 @@
 
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${token}`);
-
     const isForm = options.body instanceof FormData;
     if (!isForm && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
     if (!headers.has("Accept")) headers.set("Accept", "application/json");
@@ -98,9 +97,8 @@
     if (!editor) return;
     const text = (editor.innerText || "").trim();
     const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
-    const chars = text.length;
     if (wordCount) wordCount.textContent = `Words: ${words}`;
-    if (charCount) charCount.textContent = `Chars: ${chars}`;
+    if (charCount) charCount.textContent = `Chars: ${text.length}`;
   }
 
   let mediaRecorder = null;
@@ -136,10 +134,8 @@
   async function startRecording() {
     show("");
     setStatus("Recording…");
-
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     chunks = [];
-
     const mimeType = pickMimeType();
     mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
 
@@ -150,19 +146,15 @@
     mediaRecorder.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
       stopTimer();
-
       const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
       lastBlob = blob;
-
       if (audioInfo) audioInfo.textContent = `Captured audio: ${(blob.size / 1024).toFixed(1)} KB`;
-
       setStatus("Uploading…");
       await transcribeBlob(blob);
     };
 
     mediaRecorder.start();
     startTimer();
-
     if (startBtn) startBtn.disabled = true;
     if (stopBtn) stopBtn.disabled = false;
   }
@@ -187,11 +179,9 @@
       const fd = new FormData();
       const file = new File([blob], "live.ogg", { type: blob.type || "audio/ogg" });
       fd.append("audio", file);
-
       const data = await apiFetch("/live-transcribe", { method: "POST", body: fd });
       const text = data && data.transcription ? String(data.transcription) : "";
       if (editor) editor.textContent = text;
-
       updateCounts();
       setStatus("Ready");
       show("Transcription completed.", "success");
@@ -201,15 +191,38 @@
     }
   }
 
+  async function translateText() {
+    const text = (editor?.innerText || "").trim();
+    if (!text) { show("No text to translate.", "error"); return; }
+
+    const targetLang = translateLangSelect?.value || "ar";
+    setStatus("Translating…");
+    show("Translating…");
+
+    try {
+      const res = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${targetLang}`
+      );
+      const data = await res.json();
+
+      if (data && data.responseData && data.responseData.translatedText) {
+        if (translationBox) translationBox.textContent = data.responseData.translatedText;
+        setStatus("Ready");
+        show("Translation completed.", "success");
+      } else {
+        throw new Error("Translation failed");
+      }
+    } catch {
+      setStatus("Error");
+      show("Translation failed. Try again.", "error");
+    }
+  }
+
   async function saveSession() {
     try {
       const title = (sessionTitleInput?.value || "").trim() || "Live Session";
       const transcript = (editor?.innerText || "").trim();
-
-      if (!transcript) {
-        show("No text to save.", "error");
-        return;
-      }
+      if (!transcript) { show("No text to save.", "error"); return; }
 
       setStatus("Saving…");
 
@@ -235,37 +248,6 @@
     }
   }
 
-  async function translateText() {
-    const text = (editor?.innerText || "").trim();
-    if (!text) {
-      show("No text to translate.", "error");
-      return;
-    }
-
-    const targetLang = translateLangSelect?.value || "ar";
-    setStatus("Translating…");
-    show("Translating…");
-
-    try {
-      const res = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${targetLang}`
-      );
-      const data = await res.json();
-
-      if (data && data.responseData && data.responseData.translatedText) {
-        if (editor) editor.textContent = data.responseData.translatedText;
-        updateCounts();
-        setStatus("Ready");
-        show("Translation completed.", "success");
-      } else {
-        throw new Error("Translation failed");
-      }
-    } catch {
-      setStatus("Error");
-      show("Translation failed. Try again.", "error");
-    }
-  }
-
   function setFontSize(delta) {
     if (!editor) return;
     const cur = parseFloat(getComputedStyle(editor).fontSize) || 16;
@@ -275,7 +257,7 @@
   function setFontFamily(v) {
     if (!editor) return;
     if (v === "serif") editor.style.fontFamily = "Georgia, 'Times New Roman', serif";
-    else if (v === "mono") editor.style.fontFamily = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+    else if (v === "mono") editor.style.fontFamily = "ui-monospace, Menlo, Consolas, monospace";
     else editor.style.fontFamily = "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
   }
 
@@ -299,6 +281,12 @@
     show("Copied.", "success");
   }
 
+  async function copyTranslation() {
+    if (!translationBox) return;
+    await navigator.clipboard.writeText(translationBox.innerText || "");
+    show("Translation copied.", "success");
+  }
+
   function saveDraft() {
     if (!editor) return;
     localStorage.setItem("nebras_live_draft", editor.innerHTML || "");
@@ -314,6 +302,7 @@
   function clearText() {
     if (!editor) return;
     editor.innerHTML = "";
+    if (translationBox) translationBox.innerHTML = "";
     updateCounts();
   }
 
@@ -390,7 +379,6 @@
     applyHighlightBtn.addEventListener("click", () => {
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed) { show("Please select text first.", "error"); return; }
-
       const color = highlightSelect.value;
       const range = sel.getRangeAt(0);
       const span = document.createElement("span");
@@ -399,14 +387,8 @@
         color === "hl-blue"   ? "#d9f2ff" :
         color === "hl-green"  ? "#d9ffe8" :
         color === "hl-pink"   ? "#ffe3f1" : "#fff7b2";
-
-      try {
-        range.surroundContents(span);
-      } catch {
-        const fragment = range.extractContents();
-        span.appendChild(fragment);
-        range.insertNode(span);
-      }
+      try { range.surroundContents(span); }
+      catch { const f = range.extractContents(); span.appendChild(f); range.insertNode(span); }
       sel.removeAllRanges();
       updateCounts();
     });
@@ -414,6 +396,7 @@
 
   if (cleanBtn) cleanBtn.addEventListener("click", cleanText);
   if (copyBtn) copyBtn.addEventListener("click", () => copyAll().catch(() => show("Copy failed.", "error")));
+  if (copyTranslationBtn) copyTranslationBtn.addEventListener("click", () => copyTranslation().catch(() => show("Copy failed.", "error")));
   if (saveDraftBtn) saveDraftBtn.addEventListener("click", saveDraft);
   if (clearTextBtn) clearTextBtn.addEventListener("click", clearText);
 
