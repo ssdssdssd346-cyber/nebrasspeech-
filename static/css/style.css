@@ -1,50 +1,37 @@
 /* =========================
-   Nebras – Soft Dream Theme (UPDATED)
-   - Increased Spacing
-   - Enlarged Logo
-   - Better Card Layout
+   Nebras – Final Unified Theme
+   Laptop & Mobile Optimized
    ========================= */
 
 :root {
   --white: #ffffff;
-  --pink-50: #fff6fb;
   --pink-100: #ffeaf3;
-  --pink-200: #ffd3e4;
-  --orange-50: #fff8f2;
   --orange-100: #fff3e8;
-  --orange-200: #ffe1c9;
-  --green-50: #f2fff8;
   --green-100: #e9fff3;
-  --green-200: #cffff0;
   --accent: #ff8fb1;
   --accent-2: #ffb347;
   --mint: #4ecdc4;
-  --lime: #7bd389;
   --text: #242424;
   --muted: #6b6b6b;
-  --border: #f0f0f0;
-  --border-2: #e9e9e9;
+  --radius-2: 24px;
   --shadow: 0 10px 30px rgba(0,0,0,0.05);
   --shadow-2: 0 20px 50px rgba(0,0,0,0.09);
-  --radius: 18px;
-  --radius-2: 24px;
-  --t: 0.28s ease;
-  --glass: rgba(255,255,255,0.78);
   --glass-2: rgba(255,255,255,0.88);
-  --focus: 0 0 0 4px rgba(255,143,177,0.18);
+  --t: 0.28s ease;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
 
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   color: var(--text);
   background: linear-gradient(135deg, var(--white), var(--pink-100), var(--orange-100), var(--green-100));
-  background-size: 420% 420%;
-  animation: dreamyBg 18s ease infinite;
-  overflow-x: hidden;
+  background-size: 400% 400%;
+  animation: dreamyBg 15s ease infinite;
   line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes dreamyBg {
@@ -53,152 +40,152 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-a { text-decoration: none; color: inherit; }
-img { max-width: 100%; height: auto; display: block; }
-
 .container {
   width: min(1200px, 92%);
   margin-inline: auto;
 }
 
-/* --- NAVBAR & LOGO --- */
+/* --- NAVBAR: كلمة نبراس ضخمة ومميزة --- */
 .navbar {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: var(--glass);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255,255,255,0.55);
-  box-shadow: var(--shadow);
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+  padding: 15px 0;
 }
 
 .nav-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 0; /* زيادة ارتفاع الهيدر قليلاً */
 }
 
 .logo a {
   font-weight: 900;
-  letter-spacing: 0.5px;
-  font-size: 2.2rem; /* تكبير حجم كلمة نبراس */
+  font-size: 2.5rem; /* حجم نبراس كبير جداً كما طلبت */
   background: linear-gradient(45deg, var(--accent), var(--accent-2), var(--mint));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  transition: var(--t);
-}
-
-.logo a:hover {
-  transform: scale(1.05);
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+  text-decoration: none;
 }
 
 .nav-links a {
-  font-size: 1rem;
-  padding: 8px 12px;
-  border-radius: 12px;
+  margin-left: 20px;
+  text-decoration: none;
+  font-weight: 500;
+  color: var(--text);
   transition: var(--t);
 }
 
-.nav-links a:hover {
-  background: rgba(255,143,177,0.10);
-}
+.nav-links a:hover { color: var(--accent); }
 
-/* --- BUTTONS --- */
-.btn-primary, .btn-outline {
-  font: inherit;
-  border-radius: 16px;
-  padding: 12px 20px; /* زيادة حجم الأزرار */
-  cursor: pointer;
-  transition: var(--t);
-  border: 1px solid transparent;
-  display: inline-block;
-  text-align: center;
-}
-
-.btn-primary {
-  color: white;
-  background: linear-gradient(45deg, var(--accent), var(--accent-2));
-  box-shadow: var(--shadow);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-2);
-}
-
-/* --- DASHBOARD SECTION --- */
-.dashboard {
-  padding: 60px 0; /* مساحة واسعة للقسم */
-}
-
-.dashboard-header {
-  margin-bottom: 40px;
-}
-
+/* --- DASHBOARD: مساحات واسعة بين الصورة والكلام والأزرار --- */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px; /* مساحة أكبر بين البطاقات */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  padding: 50px 0;
 }
 
 .dashboard-card {
   background: var(--glass-2);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.65);
   border-radius: var(--radius-2);
-  padding: 40px 25px; /* زيادة التباعد الداخلي للبطاقة */
+  padding: 45px 25px; /* زيادة التباعد الداخلي */
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px; /* مساحة ثابتة بين (الصورة، النص، الزر) */
+  gap: 25px; /* مسافة ثابتة ومريحة بين (الصورة - النص - الزر) */
   box-shadow: var(--shadow);
   transition: var(--t);
+  border: 1px solid rgba(255,255,255,0.6);
 }
 
 .dashboard-card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-8px);
   box-shadow: var(--shadow-2);
 }
 
 .dashboard-card img {
-  width: 65px; /* تكبير الأيقونة قليلاً */
-  height: 65px;
-  margin-bottom: 10px;
-}
-
-.dashboard-card h3 {
-  font-size: 1.4rem;
+  width: 75px; /* تكبير الصورة قليلاً */
+  height: 75px;
   margin-bottom: 5px;
 }
 
-.dashboard-card p {
-  font-size: 0.95rem;
-  color: var(--muted);
-  margin-bottom: 10px;
-  line-height: 1.5;
+/* --- FORM: محاذاة الحقول على خط واحد --- */
+.auth-card {
+  background: var(--glass-2);
+  border-radius: var(--radius-2);
+  padding: 40px;
+  max-width: 550px;
+  margin: 40px auto;
+  box-shadow: var(--shadow-2);
 }
 
-/* --- FOOTER --- */
+.form-group {
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 150px 1fr; /* يضمن محاذاة كل الحقول على حد واحد */
+  align-items: center;
+  gap: 15px;
+}
+
+.form-group label {
+  font-weight: 600;
+  text-align: left;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  outline: none;
+  transition: var(--t);
+}
+
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,143,177,0.1); }
+
+/* --- BUTTONS: أزرار واضحة ومقاس موحد --- */
+.btn-primary {
+  background: linear-gradient(45deg, var(--accent), var(--accent-2));
+  color: white;
+  padding: 14px 28px;
+  border-radius: 16px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--t);
+  width: 100%;
+}
+
+.btn-primary:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow);
+}
+
+/* --- FOOTER: مساحة واسعة للحقوق --- */
 .footer {
-  margin-top: 100px; /* مسافة كبيرة قبل الفوتر ليعطي راحة للعين */
-  padding: 40px 0;
-  color: var(--muted);
+  margin-top: auto; /* دفع الفوتر لآخر الصفحة */
+  padding: 50px 0;
   text-align: center;
-  font-size: 1rem;
-  border-top: 1px solid rgba(0,0,0,0.05);
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 980px) {
-  .dashboard-grid { grid-template-columns: 1fr; gap: 20px; }
-  .logo a { font-size: 1.8rem; }
+/* --- RESPONSIVE: التوافق مع الجوال --- */
+@media (max-width: 650px) {
+  .logo a { font-size: 1.9rem; }
+  
+  .form-group {
+    grid-template-columns: 1fr; /* ترتيب العناصر فوق بعضها في الجوال */
+    gap: 8px;
+  }
+  
+  .dashboard-grid { padding: 20px 0; }
+  
+  .dashboard-card { padding: 30px 20px; }
 }
