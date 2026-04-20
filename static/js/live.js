@@ -34,6 +34,12 @@
   const replaceOneBtn = document.getElementById("replaceOneBtn");
   const replaceAllBtn = document.getElementById("replaceAllBtn");
 
+  const translateBtn = document.getElementById("translateBtn");
+  const translateLangSelect = document.getElementById("translateLangSelect");
+
+  const saveSessionBtn = document.getElementById("saveSessionBtn");
+  const sessionTitleInput = document.getElementById("sessionTitle");
+
   const wordCount = document.getElementById("wordCount");
   const charCount = document.getElementById("charCount");
 
@@ -57,19 +63,11 @@
       const a = JSON.parse(localStorage.getItem("nebras_auth") || "null");
       if (a && a.access_token) return a.access_token;
     } catch {}
-
     try {
       const b = JSON.parse(localStorage.getItem("nebras_auth_v2") || "null");
       if (b && b.token) return b.token;
     } catch {}
-
-    const t = localStorage.getItem("nebras_token");
-    if (t) return t;
-
-    const t2 = localStorage.getItem("access_token");
-    if (t2) return t2;
-
-    return null;
+    return localStorage.getItem("nebras_token") || localStorage.getItem("access_token") || null;
   }
 
   async function apiFetch(url, options = {}) {
@@ -109,6 +107,7 @@
   let chunks = [];
   let timerId = null;
   let startAt = 0;
+  let lastBlob = null;
 
   function startTimer() {
     startAt = Date.now();
@@ -127,16 +126,9 @@
   }
 
   function pickMimeType() {
-    const candidates = [
-      "audio/ogg;codecs=opus",
-      "audio/webm;codecs=opus",
-      "audio/ogg",
-      "audio/webm",
-    ];
+    const candidates = ["audio/ogg;codecs=opus", "audio/webm;codecs=opus", "audio/ogg", "audio/webm"];
     for (const m of candidates) {
-      if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) {
-        return m;
-      }
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m;
     }
     return "";
   }
@@ -160,10 +152,9 @@
       stopTimer();
 
       const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
+      lastBlob = blob;
 
-      if (audioInfo) {
-        audioInfo.textContent = `Captured audio: ${(blob.size / 1024).toFixed(1)} KB`;
-      }
+      if (audioInfo) audioInfo.textContent = `Captured audio: ${(blob.size / 1024).toFixed(1)} KB`;
 
       setStatus("Uploading…");
       await transcribeBlob(blob);
@@ -186,6 +177,7 @@
 
   function clearAll() {
     if (audioInfo) audioInfo.textContent = "";
+    lastBlob = null;
     setStatus("Ready");
     show("");
   }
@@ -197,7 +189,6 @@
       fd.append("audio", file);
 
       const data = await apiFetch("/live-transcribe", { method: "POST", body: fd });
-
       const text = data && data.transcription ? String(data.transcription) : "";
       if (editor) editor.textContent = text;
 
@@ -210,11 +201,75 @@
     }
   }
 
+  async function saveSession() {
+    try {
+      const title = (sessionTitleInput?.value || "").trim() || "Live Session";
+      const transcript = (editor?.innerText || "").trim();
+
+      if (!transcript) {
+        show("No text to save.", "error");
+        return;
+      }
+
+      setStatus("Saving…");
+
+      if (lastBlob) {
+        const fd = new FormData();
+        const file = new File([lastBlob], "live.ogg", { type: lastBlob.type || "audio/ogg" });
+        fd.append("audio", file);
+        fd.append("title", title);
+        fd.append("transcript", transcript);
+        await apiFetch("/live-final-save", { method: "POST", body: fd });
+      } else {
+        await apiFetch("/api/sessions-text", {
+          method: "POST",
+          body: JSON.stringify({ title, transcript })
+        });
+      }
+
+      setStatus("Ready");
+      show("Session saved successfully.", "success");
+    } catch (err) {
+      setStatus("Error");
+      show(err.message || "Failed to save session.", "error");
+    }
+  }
+
+  async function translateText() {
+    const text = (editor?.innerText || "").trim();
+    if (!text) {
+      show("No text to translate.", "error");
+      return;
+    }
+
+    const targetLang = translateLangSelect?.value || "ar";
+    setStatus("Translating…");
+    show("Translating…");
+
+    try {
+      const res = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${targetLang}`
+      );
+      const data = await res.json();
+
+      if (data && data.responseData && data.responseData.translatedText) {
+        if (editor) editor.textContent = data.responseData.translatedText;
+        updateCounts();
+        setStatus("Ready");
+        show("Translation completed.", "success");
+      } else {
+        throw new Error("Translation failed");
+      }
+    } catch {
+      setStatus("Error");
+      show("Translation failed. Try again.", "error");
+    }
+  }
+
   function setFontSize(delta) {
     if (!editor) return;
     const cur = parseFloat(getComputedStyle(editor).fontSize) || 16;
-    const next = Math.min(28, Math.max(12, cur + delta));
-    editor.style.fontSize = `${next}px`;
+    editor.style.fontSize = `${Math.min(28, Math.max(12, cur + delta))}px`;
   }
 
   function setFontFamily(v) {
@@ -232,8 +287,7 @@
   function cleanText() {
     if (!editor) return;
     let t = editor.innerText || "";
-    t = t.replace(/[ \t]+/g, " ");
-    t = t.replace(/\n{3,}/g, "\n\n");
+    t = t.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n");
     editor.textContent = t.trim();
     updateCounts();
     show("Cleaned.", "success");
@@ -269,16 +323,10 @@
     if (!editor) return;
     const q = String(findInput?.value || "").trim();
     if (!q) return;
-
     const text = editor.innerText || "";
     const start = next ? lastFind + 1 : 0;
     const idx = text.toLowerCase().indexOf(q.toLowerCase(), start);
-
-    if (idx === -1) {
-      show("No match.", "error");
-      lastFind = -1;
-      return;
-    }
+    if (idx === -1) { show("No match.", "error"); lastFind = -1; return; }
     lastFind = idx;
     show(`Found at position ${idx + 1}.`, "success");
   }
@@ -288,11 +336,9 @@
     const q = String(findInput?.value || "").trim();
     const r = String(replaceInput?.value || "");
     if (!q) return;
-
     const text = editor.innerText || "";
     const idx = text.toLowerCase().indexOf(q.toLowerCase());
     if (idx === -1) return show("No match to replace.", "error");
-
     editor.textContent = text.slice(0, idx) + r + text.slice(idx + q.length);
     updateCounts();
     show("Replaced one.", "success");
@@ -303,7 +349,6 @@
     const q = String(findInput?.value || "").trim();
     const r = String(replaceInput?.value || "");
     if (!q) return;
-
     const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
     editor.textContent = (editor.innerText || "").replace(re, r);
     updateCounts();
@@ -341,6 +386,32 @@
   if (alignRightBtn) alignRightBtn.addEventListener("click", () => setAlign("right"));
   if (readingModeBtn) readingModeBtn.addEventListener("click", toggleReading);
 
+  if (applyHighlightBtn && highlightSelect) {
+    applyHighlightBtn.addEventListener("click", () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) { show("Please select text first.", "error"); return; }
+
+      const color = highlightSelect.value;
+      const range = sel.getRangeAt(0);
+      const span = document.createElement("span");
+      span.style.backgroundColor =
+        color === "hl-yellow" ? "#fff7b2" :
+        color === "hl-blue"   ? "#d9f2ff" :
+        color === "hl-green"  ? "#d9ffe8" :
+        color === "hl-pink"   ? "#ffe3f1" : "#fff7b2";
+
+      try {
+        range.surroundContents(span);
+      } catch {
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+      }
+      sel.removeAllRanges();
+      updateCounts();
+    });
+  }
+
   if (cleanBtn) cleanBtn.addEventListener("click", cleanText);
   if (copyBtn) copyBtn.addEventListener("click", () => copyAll().catch(() => show("Copy failed.", "error")));
   if (saveDraftBtn) saveDraftBtn.addEventListener("click", saveDraft);
@@ -351,6 +422,9 @@
   if (clearFindBtn) clearFindBtn.addEventListener("click", clearFind);
   if (replaceOneBtn) replaceOneBtn.addEventListener("click", replaceOne);
   if (replaceAllBtn) replaceAllBtn.addEventListener("click", replaceAll);
+
+  if (translateBtn) translateBtn.addEventListener("click", translateText);
+  if (saveSessionBtn) saveSessionBtn.addEventListener("click", saveSession);
 
   if (recTimer) recTimer.textContent = "00:00";
   setStatus("Ready");
