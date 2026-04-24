@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nebras | Live</title>
-  <meta name="description" content="Live session editor with productivity tools." />
+  <meta name="description" content="Live speech-to-text session for real-time communication." />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -12,6 +12,7 @@
 <header class="navbar">
   <div class="container nav-container">
     <div class="logo"><a href="/dashboard">Nebras</a></div>
+
     <nav class="nav-links">
       <a href="/dashboard">Dashboard</a>
       <a href="/upload">Upload</a>
@@ -26,7 +27,9 @@
 
     <section class="page-header">
       <h1>Live Session</h1>
-      <p class="muted">Edit text, search, replace, highlight, save drafts, and manage sessions.</p>
+      <p class="muted">
+        Convert spoken speech into written text in real time.
+      </p>
     </section>
 
     <section class="tool-panel">
@@ -34,7 +37,6 @@
       <div class="status-bar">
         <span class="status-label">Status:</span>
         <span id="statusPill" class="status-pill">Ready</span>
-        <span class="muted" id="autosavePill"></span>
       </div>
 
       <div class="controls">
@@ -45,77 +47,28 @@
       </div>
 
       <div class="controls">
-        <button id="fontMinusBtn" class="btn-outline" type="button">A-</button>
-        <button id="fontPlusBtn" class="btn-outline" type="button">A+</button>
-
-        <label class="sr-only" for="fontFamilySelect">Font Family</label>
-        <select id="fontFamilySelect" class="select">
-          <option value="sans">Sans</option>
-          <option value="serif">Serif</option>
-          <option value="mono">Mono</option>
-        </select>
-
-        <button id="alignLeftBtn" class="btn-outline" type="button">Left</button>
-        <button id="alignCenterBtn" class="btn-outline" type="button">Center</button>
-        <button id="alignRightBtn" class="btn-outline" type="button">Right</button>
-
-        <button id="readingModeBtn" class="btn-outline" type="button">Reading Mode</button>
-      </div>
-
-      <div class="controls">
-        <label class="sr-only" for="highlightSelect">Highlight Color</label>
-        <select id="highlightSelect" class="select">
-          <option value="hl-yellow">Highlight Yellow</option>
-          <option value="hl-blue">Highlight Blue</option>
-          <option value="hl-green">Highlight Green</option>
-          <option value="hl-pink">Highlight Pink</option>
-        </select>
-        <button id="applyHighlightBtn" class="btn-outline" type="button">Apply Highlight</button>
-
-        <button id="cleanBtn" class="btn-outline" type="button">Clean Text</button>
-        <button id="copyBtn" class="btn-outline" type="button">Copy All</button>
-        <button id="saveDraftBtn" class="btn-outline" type="button">Save Draft</button>
-        <button id="clearTextBtn" class="btn-outline" type="button">Clear Text</button>
-      </div>
-
-      <div class="controls">
-        <label class="sr-only" for="findInput">Find</label>
-        <input id="findInput" class="input" type="text" placeholder="Find..." />
-
-        <button id="findBtn" class="btn-outline" type="button">Find</button>
-        <button id="findNextBtn" class="btn-outline" type="button">Find Next</button>
-        <button id="clearFindBtn" class="btn-outline" type="button">Clear Find</button>
-
-        <label class="sr-only" for="replaceInput">Replace With</label>
-        <input id="replaceInput" class="input" type="text" placeholder="Replace with..." />
-
-        <button id="replaceOneBtn" class="btn-outline" type="button">Replace One</button>
-        <button id="replaceAllBtn" class="btn-outline" type="button">Replace All</button>
-      </div>
-
-      <!-- Translate Controls -->
-      <div class="controls">
         <label class="sr-only" for="translateLang">Translate To</label>
         <select id="translateLang" class="select">
-          <option value="en">الترجمة إلى: إنجليزي</option>
-          <option value="ar">الترجمة إلى: عربي</option>
-          <option value="fr">الترجمة إلى: فرنسي</option>
-          <option value="es">الترجمة إلى: إسباني</option>
-          <option value="de">الترجمة إلى: ألماني</option>
-          <option value="tr">الترجمة إلى: تركي</option>
+          <option value="en">Translate to English</option>
+          <option value="ar">Translate to Arabic</option>
+          <option value="fr">Translate to French</option>
+          <option value="es">Translate to Spanish</option>
+          <option value="de">Translate to German</option>
+          <option value="tr">Translate to Turkish</option>
         </select>
-        <button id="translateBtn" class="btn-outline" type="button">🌐 ترجمة النص</button>
-        <button id="clearTranslateBtn" class="btn-outline" type="button" style="display:none">✕ إخفاء الترجمة</button>
+
+        <button id="translateBtn" class="btn-outline" type="button">Translate Text</button>
+        <button id="clearTranslateBtn" class="btn-outline" type="button" hidden>Hide Translation</button>
       </div>
 
-      <!-- Side-by-side editors -->
       <div class="dual-editor-wrap">
         <div class="transcript-box dual-box">
-          <label class="transcript-label" for="editor">النص الأصلي</label>
+          <label class="transcript-label" for="editor">Original Text</label>
           <div id="editor" class="rich-editor" contenteditable="true" spellcheck="false"></div>
         </div>
-        <div class="transcript-box dual-box" id="translateBox" style="display:none">
-          <label class="transcript-label">الترجمة</label>
+
+        <div class="transcript-box dual-box" id="translateBox" hidden>
+          <label class="transcript-label" for="translatedEditor">Translated Text</label>
           <div id="translatedEditor" class="rich-editor" contenteditable="false"></div>
         </div>
       </div>
@@ -123,21 +76,6 @@
       <div class="controls">
         <span class="muted" id="wordCount">Words: 0</span>
         <span class="muted" id="charCount">Chars: 0</span>
-      </div>
-
-      <!-- Translate -->
-      <div class="controls">
-        <label class="sr-only" for="translateLang">Translate To</label>
-        <select id="translateLang" class="select">
-          <option value="en">الترجمة إلى: إنجليزي</option>
-          <option value="ar">الترجمة إلى: عربي</option>
-          <option value="fr">الترجمة إلى: فرنسي</option>
-          <option value="es">الترجمة إلى: إسباني</option>
-          <option value="de">الترجمة إلى: ألماني</option>
-          <option value="tr">الترجمة إلى: تركي</option>
-        </select>
-        <button id="translateBtn" class="btn-outline" type="button">🌐 ترجمة النص</button>
-        <button id="restoreOriginalBtn" class="btn-outline" type="button" style="display:none">↩ النص الأصلي</button>
       </div>
 
       <div class="actions">
@@ -154,11 +92,12 @@
 
 <footer class="footer">
   <div class="container footer-content">
-    <p>© <span id="year"></span> Nebras. All rights reserved.</p>
+    <p>© 2026 Nebras. All rights reserved.</p>
   </div>
 </footer>
 
 <script src="js/main.js" defer></script>
 <script src="js/live.js" defer></script>
+
 </body>
 </html>
